@@ -21,4 +21,5 @@
   - .NET 애플리케이션의 네이티브 실행
 
 - **컨테이너 최적화** (`notes/container-optimization.md`)
+
   - AOT를 활용한 경량화된 컨테이너 빌드

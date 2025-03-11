@@ -1,0 +1,118 @@
+pipeline {
+    agent any
+
+    environment {
+        // 인증 정보 및 환경 변수 설정
+        GIT_CREDENTIALS_ID = '[-]'                  // Jenkins에 등록된 Git 인증 정보 ID
+        SOURCE_REPO = '[git]'                       // 소스 코드 저장소 주소
+        TARGET_REPO = '[git]'                       // 결과물을 푸시할 타깃 저장소 주소
+        TARGET_DIR = '[-]'                          // 빌드 결과물이 저장될 디렉토리
+        SOURCE_DIR = '[-]'                          // 소스 디렉토리 경로
+        EXCLUDE_DIRS = '[-],[-],[-]'                // 빌드 제외 대상 디렉토리 목록
+        BRANCH_NAME = new Date().format('yyyy-MM-dd') // 커밋할 브랜치 이름 (날짜 기반)
+    }
+
+    stages {
+        stage('Clone Source Repository') {
+            steps {
+                // 소스 저장소 클론
+                withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    sh '''
+                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${SOURCE_REPO} source-repo
+                    '''
+                }
+            }
+        }
+
+        stage('Clone Target Repository') {
+            steps {
+                // 타깃 저장소 클론 및 main 브랜치 체크아웃
+                withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    sh '''
+                        rm -rf target-repo
+                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${TARGET_REPO} target-repo
+                        cd target-repo
+                        git checkout main
+                    '''
+                }
+            }
+        }
+
+        stage('Set Lib Storages') {
+            steps {
+                // NuGet 저장소 설정 (인증 토큰 사용)
+                withCredentials([string(credentialsId: 'nuget_npm_token', variable: 'LIB_AUTH_TOKEN')]) {
+                    sh '''
+                        dotnet nuget list source | grep -q [source] && dotnet nuget remove source [source] || echo "NuGet source does not exist, adding now."
+                        dotnet nuget add source \
+                            --name [source] \
+                            --username [-] \
+                            --password ${LIB_AUTH_TOKEN} \
+                            --store-password-in-clear-text \
+                            [git api]
+                    '''
+                }
+            }
+        }
+
+        stage('Build and Deploy .NET Console Apps') {
+            steps {
+                script {
+                    // 제외할 디렉토리 필터링 및 빌드 실행
+                    def excludeDirs = EXCLUDE_DIRS.split(',')
+                    def dirsToBuild = []
+                    def allDirs = sh(script: "ls ${SOURCE_DIR}", returnStdout: true).trim().split('\n')
+
+                    allDirs.each { dirName ->
+                        def fullPath = "${SOURCE_DIR}/${dirName}"
+                        if (fileExists(fullPath) && sh(script: "test -d ${fullPath}", returnStatus: true) == 0 && !excludeDirs.contains(dirName)) {
+                            dirsToBuild << dirName
+                        }
+                    }
+
+                    dirsToBuild.each { dirName ->
+                        dir("${SOURCE_DIR}/${dirName}") {
+                            // 프로젝트 복원 및 빌드
+                            sh "dotnet restore ${dirName}.csproj"
+                            sh "dotnet publish ${dirName}.csproj -c Release -o publish"
+
+                            // 빌드 결과물 복사
+                            dir('publish') {
+                                sh "mkdir -p ${TARGET_DIR}/${dirName}"
+                                sh "cp -r * ${TARGET_DIR}/${dirName}/"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Commit and Push to Target Repository') {
+            steps {
+                dir('target-repo') {
+                    withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        script {
+                            // Git 커밋 및 푸시
+                            sh '''
+                                git config user.email "[-]"
+                                git config user.name "[-]"
+
+                                git checkout -b ${BRANCH_NAME}_data
+                                git add .
+                                git commit -m "Deploy data collection console apps on ${BRANCH_NAME}"
+                                git push -u origin ${BRANCH_NAME}_data --force
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // 워크스페이스 정리
+            cleanWs()
+        }
+    }
+}

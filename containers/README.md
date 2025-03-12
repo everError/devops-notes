@@ -11,3 +11,4 @@
 - **Docker 학습 자료** (`docker/`)
   - Docker 기본 명령어 (`docker/notes/docker_basics.md`)
   - Docker 파일 작성 방식 (`docker/notes/image_dockerfile.md`)
+  - Docker Compose (`docker/notes/docker_compose.md`)

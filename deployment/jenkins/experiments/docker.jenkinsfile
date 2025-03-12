@@ -1,0 +1,93 @@
+pipeline {
+  agent any  // 어떤 에이전트에서도 실행 가능
+
+  parameters {
+    // 파라미터로 빌드 대상 선택 (ALL, API, WEB 중 하나 선택)
+    choice(name: 'BUILD_TYPE', choices: ['ALL', 'API', 'WEB'], description: '빌드할 대상 선택')
+  }
+
+  environment {
+    // Git 인증 정보 ID (Jenkins Credentials에 등록된 ID)
+    GIT_CREDENTIALS_ID = '[-]'
+    
+    // 소스 저장소 주소 (GitLab/GitHub 등)
+    SOURCE_REPO = '[-]'
+    
+    // 소스 저장소가 clone 될 디렉토리 경로
+    SOURCE_DIR = 'source-repo'
+
+    // Docker 이미지 레지스트리 주소 (예: docker.io/your-org)
+    IMAGE_REGISTRY = '[-]'
+
+    // Docker 이미지 이름 (공통 이름, 태그는 각 서비스별로 다르게)
+    IMAGE_NAME = 'workspace-demo'
+
+    // 현재 날짜/시간 기반 태그 (버전 고유값으로 활용)
+    TIMESTAMP = "${new Date().format('yyyyMMdd_HHmmss')}"
+
+    // API 이미지 태그
+    TAG_API = "v_api_${TIMESTAMP}"
+
+    // 웹 프로젝트별 이미지 태그
+    TAG_WEB_AUTH = "v_web_auth_${TIMESTAMP}"
+    TAG_WEB_CLIENT = "v_web_client_${TIMESTAMP}"
+    TAG_WEB_MANAGE = "v_web_manage_${TIMESTAMP}"
+  }
+
+  stages {
+    stage('Clone Source Repository') {
+      steps {
+        // Git 인증 정보를 사용해 소스 저장소 clone
+        withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+          sh '''
+            // 기존 소스 디렉토리 삭제 후 재 clone
+            rm -rf ${SOURCE_DIR}
+            git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${SOURCE_REPO} ${SOURCE_DIR}
+          '''
+        }
+      }
+    }
+
+    stage('Build & Push API Image') {
+      when {
+        // API 또는 ALL 선택 시 실행
+        expression { params.BUILD_TYPE == 'ALL' || params.BUILD_TYPE == 'API' }
+      }
+      steps {
+        // API 디렉토리에서 Docker 이미지 빌드 및 푸시
+        dir("${SOURCE_DIR}/workspace-api/api") {
+          sh """
+            docker build -t ${IMAGE_REGISTRY}/${IMAGE_NAME}:${TAG_API} .
+            docker push ${IMAGE_REGISTRY}/${IMAGE_NAME}:${TAG_API}
+          """
+        }
+      }
+    }
+
+    stage('Build & Push Web Images') {
+      when {
+        // WEB 또는 ALL 선택 시 실행
+        expression { params.BUILD_TYPE == 'ALL' || params.BUILD_TYPE == 'WEB' }
+      }
+      steps {
+        script {
+          // 웹 프로젝트 목록 정의 (auth, client, manage)
+          def webProjects = [
+            [name: 'auth', tag: "${TAG_WEB_AUTH}"],
+            [name: 'client', tag: "${TAG_WEB_CLIENT}"],
+            [name: 'manage', tag: "${TAG_WEB_MANAGE}"]
+          ]
+
+          // 각 웹 프로젝트에 대해 반복적으로 Docker 이미지 빌드 및 푸시
+          for (project in webProjects) {
+            def projectPath = "${SOURCE_DIR}/workspace/packages/${project.name}"
+            sh """
+              docker build -t ${IMAGE_REGISTRY}/${IMAGE_NAME}:${project.tag} -f ${projectPath}/Dockerfile ${SOURCE_DIR}/workspace
+              docker push ${IMAGE_REGISTRY}/${IMAGE_NAME}:${project.tag}
+            """
+          }
+        }
+      }
+    }
+  }
+}

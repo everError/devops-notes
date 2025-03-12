@@ -1,0 +1,29 @@
+version: "3.6" # Docker Compose 파일 버전 (v3.6 사용)
+
+services:
+  nginx:
+    container_name: app-nginx # 생성될 컨테이너 이름
+    image: nginx:alpine # 사용할 Docker 이미지 (경량 Alpine 기반 Nginx)
+
+    networks:
+      - dev # 컨테이너가 사용할 사용자 정의 네트워크
+
+    volumes:
+      # 호스트의 ./conf.d 디렉토리를 컨테이너의 Nginx 설정 디렉토리로 마운트
+      - ./conf.d:/etc/nginx/conf.d
+
+      # Let's Encrypt 인증용 인증 파일 저장 디렉토리 마운트
+      - /var/www/letsencrypt:/var/www/letsencrypt
+
+      # SSL 인증서가 저장된 디렉토리를 컨테이너 내부로 마운트 (HTTPS 구성용)
+      - /etc/letsencrypt:/etc/letsencrypt
+
+    ports:
+      # 호스트의 80 포트를 컨테이너 80 포트에 바인딩 (HTTP 서비스용)
+      - "80:80"
+      # 호스트의 443 포트를 컨테이너 443 포트에 바인딩 (HTTPS 서비스용)
+      - "443:443"
+
+networks:
+  dev:
+    name: "dev" # 사용자 정의 네트워크 이름 지정 (서비스 간 통신 가능)

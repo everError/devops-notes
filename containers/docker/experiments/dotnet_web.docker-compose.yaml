@@ -1,0 +1,35 @@
+version: "3.6" # Docker Compose 파일 버전
+
+services:
+  # 💡 Web (Frontend - Nginx) 서비스 정의
+  mes-demo-web-mes:
+    container_name: demo-web # 컨테이너 이름 지정
+    image: ex/ex:v_0 # 사용할 Docker 이미지 (버전 태그 포함)
+    networks:
+      - dev # adot-dev 네트워크에 연결
+    volumes:
+      - ./front/web.conf:/etc/nginx/conf.d/default.conf # 호스트의 Nginx 설정 파일을 컨테이너 내부로 마운트 (Nginx 설정 덮어쓰기)
+    expose:
+      - "80" # 내부 컨테이너 포트 80을 노출 (외부 포트 매핑은 `ports:`로 따로 설정해야 함)
+
+  # 💡 API (Backend - ASP.NET Core) 서비스 정의
+  mes-demo-api-mes:
+    container_name: demo-api # 컨테이너 이름 지정
+    image: ex/ex:v_0 # 사용할 Docker 이미지 (버전 태그 포함)
+    networks:
+      - dev # adot-dev 네트워크에 연결
+
+    # (선택사항) API 서버 내부에서 사용하는 파일 볼륨 마운트 (현재 주석 처리됨)
+    # volumes:
+    #   - ./back/DataFile:/app/DataFile
+
+    environment:
+      ASPNETCORE_URLS: "http://*:5000" # ASP.NET Core가 5000번 포트로 리스닝하도록 설정
+
+    expose:
+      - "5000" # 내부 컨테이너 포트 5000을 노출 (외부 포트 매핑은 `ports:` 사용 시 적용됨)
+
+# 🔗 네트워크 정의
+networks:
+  dev:
+    name: "dev" # 사용자 지정 네트워크 이름 (컨테이너 간 통신용 네트워크)

@@ -11,6 +11,7 @@ DevOps는 개발(Development)과 운영(Operations)의 결합으로, 소프트�
 - [Container](./containers/)
 - [Runtime Optimization](./runtime-optimization/)
 - [Deployment](./deployment/)
+- [IaC](./IaC/)
 
 ## 📂 학습 내용
 

@@ -65,7 +65,49 @@ Start-Service -Name "ServiceName"
 net start ServiceName
 ```
 
-## 🚀 5. 자동 시작 및 재시작 설정
+## 🖥️ 5. 서비스 및 이벤트 뷰어에서 관리
+
+### 서비스 관리
+
+서비스를 관리하는 가장 기본적인 방법은 **services.msc** (서비스 관리자)를 사용하는 것입니다.
+
+1. `Win + R` → `services.msc` 입력 → 엔터
+2. 서비스 목록에서 설치한 서비스를 찾기
+3. 서비스 상태, 시작 유형, 로그온 계정 등 관리 가능
+
+### PowerShell 또는 CMD 에서 서비스 확인
+
+```powershell
+Get-Service -Name "ServiceName"
+```
+
+서비스 삭제:
+```powershell
+sc.exe delete ServiceName
+```
+
+### 이벤트 뷰어 관리
+
+이벤트 뷰어를 통해 서비스의 실행 상태 및 오류를 모니터링할 수 있습니다.
+
+1. `Win + R` → `eventvwr.msc` 입력 → 엔터
+2. 왼쪽 트리에서 "Windows 로그" → "응용 프로그램" 선택
+3. 서비스 이름 또는 소스를 기준으로 필터링하여 로그 확인
+
+> 💡 프로그램에서 이벤트 로그를 남기려면 `System.Diagnostics.EventLog` 또는 `ILogger` 의 EventLog 확장을 사용해야 합니다.
+
+```csharp
+if (!EventLog.SourceExists("MyServiceSource"))
+{
+    EventLog.CreateEventSource("MyServiceSource", "Application");
+}
+
+var eventLog = new EventLog("Application");
+eventLog.Source = "MyServiceSource";
+eventLog.WriteEntry("서비스가 동작 중입니다.", EventLogEntryType.Information);
+```
+
+## 🚀 6. 자동 시작 및 재시작 설정
 
 ### 서비스 자동 시작:
 ```powershell
@@ -79,12 +121,12 @@ sc failure ServiceName reset= 0 actions= restart/5000
 - 서비스 실패 시 5초 후 자동 재시작
 - `reset= 0`: 실패 횟수 초기화 안 함 (영구 재시도)
 
-## 🔍 6. 서비스 로그 확인
+## 🔍 7. 서비스 로그 확인
 
 서비스 동작 상태 및 오류 발생 시, 이벤트 로그를 확인하여 문제를 파악합니다.
 
 - **Windows Event Viewer**
-  - Windows Logs > Application > 해당 프로그램 이름을 통해 확인
+  - Windows Logs > Application > 해당 프로그램 이름 또는 소스명을 통해 확인
 - 프로그램 내에서 `ILogger` 또는 `EventLog` 를 사용하여 로그 기록을 권장합니다.
 
 ---
@@ -97,8 +139,9 @@ sc failure ServiceName reset= 0 actions= restart/5000
 | ✅ 2 | 배포 파일을 서버에 복사 |
 | ✅ 3 | PowerShell 또는 CMD 를 통해 서비스 등록 |
 | ✅ 4 | 서비스 시작 및 동작 확인 |
-| ✅ 5 | 자동 시작 및 재시작 설정 |
-| ✅ 6 | 이벤트 로그 확인 |
+| ✅ 5 | 서비스 및 이벤트 뷰어에서 서비스 관리 |
+| ✅ 6 | 자동 시작 및 재시작 설정 |
+| ✅ 7 | 이벤트 로그 확인 |
 
 ---
 

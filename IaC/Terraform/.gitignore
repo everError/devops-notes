@@ -1,0 +1,32 @@
+# Local .terraform directories
+.terraform/
+
+# Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+
+# Crash log files
+crash.log
+
+# Override files (used for sensitive data like credentials)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Generated graph files
+*.png
+
+# Variable files with sensitive data (optional, only if used)
+*.tfvars
+*.tfvars.json
+
+# Editor-specific
+.vscode/
+.idea/
+*.swp
+*~

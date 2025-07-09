@@ -2,11 +2,11 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
+    {{- include "pacman.selectorLabels" . | nindent 8}}
 spec:
   ports:
     - name: http
       port: {{ .Values.image.containerPort }}
       targetPort: {{ .Values.image.containerPort }}
   selector:
-    app.kubernetes.io/name: {{ .Chart.Name }}
+    {{- include "pacman.selectorLabels" . | nindent 6}}

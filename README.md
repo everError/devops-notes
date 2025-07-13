@@ -21,4 +21,4 @@ DevOps는 개발(Development)과 운영(Operations)의 결합으로, 소프트�
 - **컨테이너 & 오케스트레이션**: Docker, Kubernetes(K8s) 등
 - **모니터링 & 로깅**: Prometheus, Grafana, ELK Stack 등
 - **클라우드 서비스**: AWS, Azure, GCP 활용
-- **빌드(Build) 및 배포**: 다양한 언어 및 환경에서의 빌드 및 배포 방식 정리
+- **빌드 및 배포**: 다양한 언어 및 환경에서의 빌드 및 배포 방식 정리

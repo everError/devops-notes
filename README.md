@@ -13,6 +13,7 @@ DevOps는 개발(Development)과 운영(Operations)의 결합으로, 소프트�
 - [Deployment](./deployment/)
 - [IaC](./IaC/)
 - [CI/CD](./cicd/)
+- [LLM](./llm/)
 
 ## 📂 학습 내용
 
@@ -22,3 +23,4 @@ DevOps는 개발(Development)과 운영(Operations)의 결합으로, 소프트�
 - **모니터링 & 로깅**: Prometheus, Grafana, ELK Stack 등
 - **클라우드 서비스**: AWS, Azure, GCP 활용
 - **빌드 및 배포**: 다양한 언어 및 환경에서의 빌드 및 배포 방식 정리
+- **LLM 운영**: Ollama, LLM 서버 구축 및 GPU 최적화, 로컬 LLM 서비스 배포

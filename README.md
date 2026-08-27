@@ -7,6 +7,7 @@
 DevOps는 개발(Development)과 운영(Operations)의 결합으로, 소프트웨어 개발과 배포 프로세스를 자동화하고 효율적으로 운영하기 위한 다양한 기법을 포함합니다.  
 이 레포지토리에서는 다음과 같은 주제를 다룹니다.
 
+- [VCS](./vcs/)
 - [Build](./build/)
 - [Container](./containers/)
 - [Runtime Optimization](./runtime-optimization/)
@@ -16,6 +17,7 @@ DevOps는 개발(Development)과 운영(Operations)의 결합으로, 소프트�
 
 ## 📂 학습 내용
 
+- **VCS**: Git 명령어와 협업 흐름 등
 - **CI/CD**: GitHub Actions, Jenkins, GitLab CI/CD 등
 - **IaC (Infrastructure as Code)**: Terraform, Ansible 등
 - **컨테이너 & 오케스트레이션**: Docker, Kubernetes(K8s) 등
